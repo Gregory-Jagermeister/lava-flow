@@ -145,7 +145,12 @@ export default class LavaFlow {
       folder.getFilesRecursive().filter((f) => f instanceof MDFileInfo).length > 0;
 
     if (combineFiles) {
-      parentJournal = await this.createJournal(folder.name, parentFolder, settings.playerObserve);
+      let journalParentAlreadyexists = await (game as Game).journal?.getName(folder.name) || null;
+      if (journalParentAlreadyexists !== null) {
+        parentJournal = journalParentAlreadyexists;
+      } else {
+        parentJournal = await this.createJournal(folder.name, parentFolder, settings.playerObserve);
+      } 
     }
 
     if (
@@ -376,6 +381,28 @@ export default class LavaFlow {
           const newContent = comparePage.text.markdown.replace(linkMatch[0], link);
           await LavaFlow.updateJournalPage(allPages[i], newContent);
         }
+
+        const internalLinkPattern = /<a[^>]*class="internal-link"[^>]*>(.*?)<\/a>/gi;
+        let content = comparePage.text.markdown;
+        let match;
+
+        while ((match = internalLinkPattern.exec(content)) !== null) {
+          const hrefMatch = match[0].match(/href="([^"]*)"/);
+          if (hrefMatch) {
+            const href = hrefMatch[1];
+            const hrefExt = '.' + hrefMatch[1].split('.')[1];
+            const filename = href.replace(hrefExt, '');
+
+            // Check if the href matches the file name
+            if (filename === fileInfo.fileNameNoExt) {
+              const foundryLink = fileInfo.getLink(href.replace(hrefExt, ''));
+              if (foundryLink) {
+                content = content.replace(match[0], foundryLink);
+              }
+            }
+          }
+        }
+        await LavaFlow.updateJournalPage(allPages[i], content);
       }
     }
   }
