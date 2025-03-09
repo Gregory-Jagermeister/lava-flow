@@ -420,7 +420,7 @@ export default class LavaFlow {
         // @ts-expect-error
         text: { markdown: "", format: CONST.JOURNAL_ENTRY_PAGE_FORMATS.HTML },
       }),
-      page.setFlag("core","sheetClass","core.JournalTextTinyMCESheet")
+      page.setFlag("core", "sheetClass", "core.JournalTextPageSheet")
     ])
   }
 }
